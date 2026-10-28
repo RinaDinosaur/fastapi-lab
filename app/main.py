@@ -68,3 +68,20 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     return db.query(Task).all()
 
 # Со следующей строки добавляйте эндпоинты для students
+from app.schemas import StudentCreate
+from fastapi import HTTPException
+
+@app.post("/students", status_code=201)
+def create_student(payload: StudentCreate):
+    student_data = payload.model_dump()
+    student_data["id"] = len(STUDENTS) + 1  # простой авто-id
+    STUDENTS.append(student_data)
+    return {"message": "Студент добавлен", "student": student_data}
+
+@app.get("/students/{student_name}")
+def get_student(student_name: str):
+    for student in STUDENTS:
+        if (student.get("first_name", "").lower() == student_name.lower() or
+                student.get("second_name", "").lower() == student_name.lower()):
+            return student
+    raise HTTPException(status_code=404, detail="Студент не найден")
